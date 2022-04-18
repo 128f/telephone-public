@@ -1,0 +1,39 @@
+name: Terraform
+on:
+  push:
+    branches:
+    - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: hashicorp/setup-terraform@v2
+    - uses: actions/checkout@master
+    - run: ./package.sh
+    - name: terraform init
+      run: terraform init -input=false
+      working-directory: ./infrastructure
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: "us-west-2"
+    - name: terraform plan
+      run: terraform plan -input=false -out=./saved
+      env:
+        TF_VAR_message_collection_name: ${{ secrets.TF_VAR_MESSAGE_COLLECTION_NAME }}
+        TF_VAR_twilio_sid: ${{ secrets.TF_VAR_TWILIO_SID }}
+        TF_VAR_twilio_token: ${{ secrets.TF_VAR_TWILIO_TOKEN }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: "us-west-2"
+      working-directory: ./infrastructure
+    - name: terraform apply
+      run: terraform apply -input=false saved
+      env:
+        TF_VAR_message_collection_name: ${{ secrets.TF_VAR_MESSAGE_COLLECTION_NAME }}
+        TF_VAR_twilio_sid: ${{ secrets.TF_VAR_TWILIO_SID }}
+        TF_VAR_twilio_token: ${{ secrets.TF_VAR_TWILIO_TOKEN }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: "us-west-2"
+      working-directory: ./infrastructure
